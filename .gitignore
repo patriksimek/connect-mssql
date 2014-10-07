@@ -1,0 +1,7 @@
+node_modules
+.DS_Store
+.svn
+.coffeemaker
+.idea
+/lib/*.js
+/test/_connection.coffee
