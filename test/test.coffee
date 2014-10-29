@@ -9,6 +9,11 @@ SAMPLE =
 	somenumber: 111
 	cookie: expires: new Date()
 
+MODIFIED =
+	somevalue: "no"
+	somenumber: 222
+	cookie: expires: new Date()
+
 describe 'connect-mssql', ->
 	store = null
 	
@@ -34,6 +39,19 @@ describe 'connect-mssql', ->
 			assert.strictEqual session.somevalue, SAMPLE.somevalue
 			assert.strictEqual session.somenumber, SAMPLE.somenumber
 			assert.equal session.cookie.expires, SAMPLE.cookie.expires.toISOString()
+			
+			done()
+	
+	it 'should modify session', (done) ->
+		store.set 'asdf', MODIFIED, done
+	
+	it 'should get modified session', (done) ->
+		store.get 'asdf', (err, session) ->
+			if err then return done err
+			
+			assert.strictEqual session.somevalue, MODIFIED.somevalue
+			assert.strictEqual session.somenumber, MODIFIED.somenumber
+			assert.equal session.cookie.expires, MODIFIED.cookie.expires.toISOString()
 			
 			done()
 	

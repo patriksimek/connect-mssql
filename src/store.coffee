@@ -51,7 +51,7 @@ module.exports = (session) ->
 			request.input 'sid', sid
 			request.input 'session', JSON.stringify data
 			request.input 'expires', expires
-			request.query "insert into [#{@table}] (sid, session, expires) values (@sid, @session, @expires)", callback
+			request.query "merge into [#{@table}] with (holdlock) s using (values(@sid, @session)) as ns (sid, session) on (s.sid = ns.sid) when matched then update set s.session = @session, s.expires = @expires when not matched then insert (sid, session, expires) values (@sid, @session, @expires);", callback
 		
 		###
 		Destroy the session associated with the given `sid`.
