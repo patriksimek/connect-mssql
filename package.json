@@ -21,7 +21,7 @@
 		"express",
 		"connect"
 	],
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"main": "lib/store.js",
 	"repository": {
 		"type": "git",
