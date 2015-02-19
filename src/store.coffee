@@ -16,6 +16,8 @@ module.exports = (session) ->
 		
 		constructor: (options) ->
 			@connection = new sql.Connection options
+			@connection.on 'connect', @emit.bind(@, 'connect')
+			@connection.on 'error', @emit.bind(@, 'error')
 			@connection.connect()
 		
 		###

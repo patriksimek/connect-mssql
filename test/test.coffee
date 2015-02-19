@@ -19,7 +19,10 @@ describe 'connect-mssql', ->
 	
 	before (done) ->
 		store = new MSSQLStore config
-		store.clear done
+		store.on 'connect', (err) ->
+			if err then return done err
+			
+			store.clear done
 	
 	it 'should not find a session', (done) ->
 		store.get 'asdf', (err, session) ->
