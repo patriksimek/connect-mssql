@@ -53,7 +53,13 @@ module.exports = (session) ->
 			request.input 'sid', sid
 			request.input 'session', JSON.stringify data
 			request.input 'expires', expires
-			request.query "merge into [#{@table}] with (holdlock) s using (values(@sid, @session)) as ns (sid, session) on (s.sid = ns.sid) when matched then update set s.session = @session, s.expires = @expires when not matched then insert (sid, session, expires) values (@sid, @session, @expires);", callback
+			
+			if @connection.config.options.tdsVersion in ['7_1', '7_2']
+				# support for sql server 2005, 2000
+				request.query "update [#{@table}] set session = @session, expires = @expires where sid = @sid;if @@rowcount = 0 begin insert into [#{@table}] (sid, session, expires) values (@sid, @session, @expires) end;", callback
+			
+			else
+				request.query "merge into [#{@table}] with (holdlock) s using (values(@sid, @session)) as ns (sid, session) on (s.sid = ns.sid) when matched then update set s.session = @session, s.expires = @expires when not matched then insert (sid, session, expires) values (@sid, @session, @expires);", callback
 		
 		###
 		Destroy the session associated with the given `sid`.
