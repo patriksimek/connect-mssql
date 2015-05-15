@@ -1,3 +1,7 @@
+v1.3.0 (2015-05-15)
+-------------------
+[new] Touch implementation
+
 v1.2.0 (2015-05-03)
 -------------------
 [new] Added support for SQL Server 2000 and 2005

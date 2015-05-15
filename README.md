@@ -8,7 +8,7 @@ SQL Server session store for Connect based on [node-mssql](https://github.com/pa
 
 ## Prerequisites
 
-Before you can use session store, you must create a table named `sessions`.
+Before you can use session store, you must create a table. Recomended table name is `sessions` but you can change it via options.
 
 ```sql
 CREATE TABLE [dbo].[sessions](
@@ -35,8 +35,12 @@ var config = {
     }
 }
 
+var options = {
+	table: 'mySessionsTable' // Table to use as session store. Default: [sessions]
+}
+
 app.use(session({
-    store: new MSSQLStore(config),
+    store: new MSSQLStore(config, options), // options are optional
     secret: 'supersecret'
 }));
 ```

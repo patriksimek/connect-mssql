@@ -62,6 +62,22 @@ module.exports = (session) ->
 				request.query "merge into [#{@table}] with (holdlock) s using (values(@sid, @session)) as ns (sid, session) on (s.sid = ns.sid) when matched then update set s.session = @session, s.expires = @expires when not matched then insert (sid, session, expires) values (@sid, @session, @expires);", callback
 		
 		###
+		Update expiration date of the given `sid`.
+		
+		@param {String} sid
+		@param {Object} data
+		@callback callback
+		###
+		
+		touch: (sid, data, callback) ->
+			expires = new Date(data.cookie?.expires ? (Date.now() + 86400))
+			
+			request = @connection.request()
+			request.input 'sid', sid
+			request.input 'expires', expires
+			request.query "update [#{@table}] set expires = @expires where sid = @sid", callback
+
+		###
 		Destroy the session associated with the given `sid`.
 		
 		@param {String} sid

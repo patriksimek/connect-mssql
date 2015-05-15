@@ -14,6 +14,9 @@ MODIFIED =
 	somenumber: 222
 	cookie: expires: new Date()
 
+TOUCHED =
+	cookie: expires: new Date(Date.now() + 1000)
+
 describe 'connect-mssql', ->
 	store = null
 	
@@ -55,6 +58,17 @@ describe 'connect-mssql', ->
 			assert.strictEqual session.somevalue, MODIFIED.somevalue
 			assert.strictEqual session.somenumber, MODIFIED.somenumber
 			assert.equal session.cookie.expires, MODIFIED.cookie.expires.toISOString()
+			
+			done()
+	
+	it 'should touch session', (done) ->
+		store.set 'asdf', TOUCHED, done
+	
+	it 'should get touched session', (done) ->
+		store.get 'asdf', (err, session) ->
+			if err then return done err
+			
+			assert.equal session.cookie.expires, TOUCHED.cookie.expires.toISOString()
 			
 			done()
 	
