@@ -27,12 +27,7 @@
 		"type": "git",
 		"url": "https://github.com/patriksimek/connect-mssql"
 	},
-	"licenses": [
-		{
-			"type": "MIT",
-			"url": "http://opensource.org/licenses/mit-license.php"
-		}
-	],
+	"license": "MIT",
 	"dependencies": {
 		"mssql": "^2.1.3"
 	},
