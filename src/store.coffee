@@ -14,8 +14,10 @@ module.exports = (session) ->
 		@param {Object} options
 		###
 		
-		constructor: (options) ->
-			@connection = new sql.Connection options
+		constructor: (dbOptions, options) ->
+			if options?.table
+				@table = options.table
+			@connection = new sql.Connection dbOptions
 			@connection.on 'connect', @emit.bind(@, 'connect')
 			@connection.on 'error', @emit.bind(@, 'error')
 			@connection.connect()
