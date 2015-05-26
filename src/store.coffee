@@ -11,13 +11,14 @@ module.exports = (session) ->
 		###
 		Initialize MSSQLStore with the given `options`.
 		
-		@param {Object} options
+		@param {Object} config
+		@param {Object} [options]
 		###
 		
-		constructor: (dbOptions, options) ->
-			if options?.table
-				@table = options.table
-			@connection = new sql.Connection dbOptions
+		constructor: (config, options) ->
+			@table = options.table if options?.table
+				
+			@connection = new sql.Connection config
 			@connection.on 'connect', @emit.bind(@, 'connect')
 			@connection.on 'error', @emit.bind(@, 'error')
 			@connection.connect()
