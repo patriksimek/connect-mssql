@@ -1,6 +1,8 @@
-# connect-mssql [![Dependency Status](https://david-dm.org/patriksimek/connect-mssql.png)](https://david-dm.org/patriksimek/connect-mssql) [![NPM version](https://badge.fury.io/js/connect-mssql.png)](http://badge.fury.io/js/connect-mssql)
+# connect-mssql
 
-SQL Server session store for Connect based on [node-mssql](https://github.com/patriksimek/node-mssql).
+SQL Server session store for Connect/Express based on [![Github Stars][mssql-image] node-mssql][mssql-url].
+
+[![NPM Version][npm-image]][npm-url] [![NPM Downloads][downloads-image]][downloads-url] [![Appveyor CI][appveyor-image]][appveyor-url]
 
 ## Installation
 
@@ -61,3 +63,15 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+[npm-image]: https://img.shields.io/npm/v/connect-mssql.svg?style=flat-square
+[npm-url]: https://www.npmjs.com/package/connect-mssql
+[downloads-image]: https://img.shields.io/npm/dm/connect-mssql.svg?style=flat-square
+[downloads-url]: https://www.npmjs.com/package/connect-mssql
+[david-image]: https://img.shields.io/david/patriksimek/connect-mssql.svg?style=flat-square
+[david-url]: https://david-dm.org/patriksimek/connect-mssql
+[appveyor-image]: https://img.shields.io/appveyor/ci/patriksimek/connect-mssql/master.svg?style=flat-square&label=tests
+[appveyor-url]: https://ci.appveyor.com/project/patriksimek/connect-mssql
+
+[mssql-url]: https://github.com/patriksimek/node-mssql
+[mssql-image]: https://img.shields.io/github/stars/patriksimek/node-mssql.svg?style=flat-square&label=%E2%98%85
