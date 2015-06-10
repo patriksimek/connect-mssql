@@ -1,3 +1,8 @@
+v1.3.2 (2015-06-10)
+-------------------
+[new] Automated integration tests.
+[fix] Default timeout corrected (Amir Saboury)
+
 v1.3.1 (2015-05-27)
 -------------------
 [fix] Passing optional options to store's contructor (Amir Saboury)
