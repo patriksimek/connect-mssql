@@ -50,7 +50,7 @@ module.exports = (session) ->
 		###
 		
 		set: (sid, data, callback) ->
-			expires = new Date(data.cookie?.expires ? (Date.now() + 86400))
+			expires = new Date(data.cookie?.expires ? (Date.now() + 86400*1000))
 			
 			request = @connection.request()
 			request.input 'sid', sid
@@ -73,7 +73,7 @@ module.exports = (session) ->
 		###
 		
 		touch: (sid, data, callback) ->
-			expires = new Date(data.cookie?.expires ? (Date.now() + 86400))
+			expires = new Date(data.cookie?.expires ? (Date.now() + 86400*1000))
 			
 			request = @connection.request()
 			request.input 'sid', sid
