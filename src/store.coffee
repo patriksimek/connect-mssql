@@ -17,7 +17,7 @@ module.exports = (session) ->
 		
 		constructor: (config, options) ->
 			@table = "[" + options.table + "]" if options?.table
-			@table = "#{@table}.[" + options.table + "]" if config?.schema
+			@table = "[" + config.schema + "].#{@table}" if config?.schema
 				
 			@connection = new sql.Connection config
 			@connection.on 'connect', @emit.bind(@, 'connect')
