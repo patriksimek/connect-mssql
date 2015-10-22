@@ -15,13 +15,16 @@ module.exports = (session) ->
 		@param {Object} [options]
 		###
 		
-		constructor: (config, options) ->
-			@table = options.table if options?.table
-				
+		constructor: (config, options, callback) ->
+			if typeof options is 'function'
+				callback = options
+			else
+				@table = options.table if options?.table
+			
 			@connection = new sql.Connection config
 			@connection.on 'connect', @emit.bind(@, 'connect')
 			@connection.on 'error', @emit.bind(@, 'error')
-			@connection.connect()
+			@connection.connect callback
 		
 		###
 		Attempt to fetch session by the given `sid`.
