@@ -7,6 +7,10 @@ module.exports = (session) ->
 	
 	class MSSQLStore extends Store
 		table: 'sessions'
+		ttl: 1000*60*60*24
+		autoRemove: 'never'
+		autoRemoveInterval: 1000*60*10
+		autoRemoveCallback: undefined
 		
 		###
 		Initialize MSSQLStore with the given `options`.
@@ -16,12 +20,22 @@ module.exports = (session) ->
 		###
 		
 		constructor: (config, options) ->
-			@table = options.table if options?.table
-				
+			self = @
+			if options?
+				@table = options.table if options.table
+				@ttl = options.ttl if options.ttl
+				@autoRemove = options.autoRemove if options.autoRemove
+				@autoRemoveInterval = options.autoRemoveInterval if options.autoRemoveInterval
+				@autoRemoveCallback = options.autoRemoveCallback if options.autoRemoveCallback
+			
 			@connection = new sql.Connection config
 			@connection.on 'connect', @emit.bind(@, 'connect')
 			@connection.on 'error', @emit.bind(@, 'error')
-			@connection.connect()
+			@connection.connect().then ->
+				if self.autoRemove == 'interval'
+					self.destroyExpired()
+					setInterval self.destroyExpired.bind(self), self.autoRemoveInterval
+				return
 		
 		###
 		Attempt to fetch session by the given `sid`.
@@ -29,7 +43,7 @@ module.exports = (session) ->
 		@param {String} sid
 		@callback callback
 		###
-			
+		
 		get: (sid, callback) ->
 			request = @connection.request()
 			request.input 'sid', sid
@@ -50,7 +64,7 @@ module.exports = (session) ->
 		###
 		
 		set: (sid, data, callback) ->
-			expires = new Date(data.cookie?.expires ? (Date.now() + 86400*1000))
+			expires = new Date(data.cookie?.expires ? (Date.now() + @ttl))
 			
 			request = @connection.request()
 			request.input 'sid', sid
@@ -73,7 +87,7 @@ module.exports = (session) ->
 		###
 		
 		touch: (sid, data, callback) ->
-			expires = new Date(data.cookie?.expires ? (Date.now() + 86400*1000))
+			expires = new Date(data.cookie?.expires ? (Date.now() + @ttl))
 			
 			request = @connection.request()
 			request.input 'sid', sid
@@ -91,6 +105,15 @@ module.exports = (session) ->
 			request = @connection.request()
 			request.input 'sid', sid
 			request.query "delete from [#{@table}] where sid = @sid", callback
+
+		###
+		Destroy expired sessions.
+		###
+		
+		destroyExpired: () ->
+			self = @
+			request = @connection.request()
+			request.query "delete from [#{@table}] where expires <= getutcdate()", self.autoRemoveCallback
 		
 		###
 		Fetch number of sessions.
