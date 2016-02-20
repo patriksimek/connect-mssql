@@ -6,7 +6,7 @@ module.exports = (session) ->
 	Store = session.Store ? session.session.Store
 	
 	class MSSQLStore extends Store
-		table: 'sessions'
+		table: '[sessions]'
 		
 		###
 		Initialize MSSQLStore with the given `options`.
@@ -16,7 +16,7 @@ module.exports = (session) ->
 		###
 		
 		constructor: (config, options) ->
-			@table = options.table if options?.table
+			@table = "[" + options.table + "]" if options?.table
 				
 			@connection = new sql.Connection config
 			@connection.on 'connect', @emit.bind(@, 'connect')
@@ -31,9 +31,10 @@ module.exports = (session) ->
 		###
 			
 		get: (sid, callback) ->
+			if !this.connection.connected then return callback null, null
 			request = @connection.request()
 			request.input 'sid', sid
-			request.query "select session from [#{@table}] where sid = @sid", (err, recordset) ->
+			request.query "select session from #{@table} where sid = @sid", (err, recordset) ->
 				if err then return callback err
 				
 				if recordset.length
@@ -50,6 +51,7 @@ module.exports = (session) ->
 		###
 		
 		set: (sid, data, callback) ->
+			if !this.connection.connected then return callback null, null
 			expires = new Date(data.cookie?.expires ? (Date.now() + 86400*1000))
 			
 			request = @connection.request()
@@ -59,10 +61,10 @@ module.exports = (session) ->
 			
 			if @connection.config.options.tdsVersion in ['7_1', '7_2']
 				# support for sql server 2005, 2000
-				request.query "update [#{@table}] set session = @session, expires = @expires where sid = @sid;if @@rowcount = 0 begin insert into [#{@table}] (sid, session, expires) values (@sid, @session, @expires) end;", callback
+				request.query "update #{@table} set session = @session, expires = @expires where sid = @sid;if @@rowcount = 0 begin insert into #{@table} (sid, session, expires) values (@sid, @session, @expires) end;", callback
 			
 			else
-				request.query "merge into [#{@table}] with (holdlock) s using (values(@sid, @session)) as ns (sid, session) on (s.sid = ns.sid) when matched then update set s.session = @session, s.expires = @expires when not matched then insert (sid, session, expires) values (@sid, @session, @expires);", callback
+				request.query "merge into #{@table} with (holdlock) s using (values(@sid, @session)) as ns (sid, session) on (s.sid = ns.sid) when matched then update set s.session = @session, s.expires = @expires when not matched then insert (sid, session, expires) values (@sid, @session, @expires);", callback
 		
 		###
 		Update expiration date of the given `sid`.
@@ -73,12 +75,13 @@ module.exports = (session) ->
 		###
 		
 		touch: (sid, data, callback) ->
+			if !this.connection.connected then return callback null, null
 			expires = new Date(data.cookie?.expires ? (Date.now() + 86400*1000))
 			
 			request = @connection.request()
 			request.input 'sid', sid
 			request.input 'expires', expires
-			request.query "update [#{@table}] set expires = @expires where sid = @sid", callback
+			request.query "update #{@table} set expires = @expires where sid = @sid", callback
 
 		###
 		Destroy the session associated with the given `sid`.
@@ -88,9 +91,10 @@ module.exports = (session) ->
 		###
 		
 		destroy: (sid, callback) ->
+			if !this.connection.connected then return callback null, null
 			request = @connection.request()
 			request.input 'sid', sid
-			request.query "delete from [#{@table}] where sid = @sid", callback
+			request.query "delete from #{@table} where sid = @sid", callback
 		
 		###
 		Fetch number of sessions.
@@ -99,8 +103,9 @@ module.exports = (session) ->
 		###
 		
 		length: (callback) ->
+			if !this.connection.connected then return callback null, null
 			request = @connection.request()
-			request.query "select count(sid) as length from [#{@table}]", (err, recordset) ->
+			request.query "select count(sid) as length from #{@table}", (err, recordset) ->
 				if err then return callback err
 				
 				callback null, recordset[0].length
@@ -112,7 +117,8 @@ module.exports = (session) ->
 		###
 		
 		clear: (callback) ->
+			if !this.connection.connected then return callback null, null
 			request = @connection.request()
-			request.query "truncate table [#{@table}]", callback
+			request.query "truncate table #{@table}", callback
 	
 	MSSQLStore
