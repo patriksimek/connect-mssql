@@ -13,17 +13,9 @@ module.exports = (session) ->
 		
 		@param {Object} config
 		@param {Object} [options]
-		@callback [cakkback]
 		###
 
-		constructor: (config, options, callback) ->
-			if 'function' is typeof options
-				callback = options
-				options = undefined
-			
-			else
-				@table = options.table if options?.table
-				
+		constructor: (config, options) ->
 			if options?.table
 				{name, schema, database} = sql.Table.parseName options.table
 				@table = "#{if database then "[#{database}]." else ""}#{if schema then "[#{schema}]." else ""}[#{name}]"
@@ -31,7 +23,12 @@ module.exports = (session) ->
 			@connection = new sql.Connection config
 			@connection.on 'connect', @emit.bind(@, 'connect')
 			@connection.on 'error', @emit.bind(@, 'error')
-			@connection.connect callback
+			@connection.connect()
+		
+		_ready: (callback) ->
+			if @connection.connected then return callback.call @
+			if @connection.connecting then return @connection.once 'connect', callback.bind @
+			callback.call @, new Error "Connection is closed."
 		
 		###
 		Attempt to fetch session by the given `sid`.
@@ -41,15 +38,18 @@ module.exports = (session) ->
 		###
 			
 		get: (sid, callback) ->
-			request = @connection.request()
-			request.input 'sid', sid
-			request.query "select session from #{@table} where sid = @sid", (err, recordset) ->
+			@_ready (err) ->
 				if err then return callback err
 				
-				if recordset.length
-					return callback null, JSON.parse recordset[0].session
-				
-				callback null, null
+				request = @connection.request()
+				request.input 'sid', sid
+				request.query "select session from #{@table} where sid = @sid", (err, recordset) ->
+					if err then return callback err
+					
+					if recordset.length
+						return callback null, JSON.parse recordset[0].session
+					
+					callback null, null
 		
 		###
 		Commit the given `sess` object associated with the given `sid`.
@@ -60,19 +60,22 @@ module.exports = (session) ->
 		###
 		
 		set: (sid, data, callback) ->
-			expires = new Date(data.cookie?.expires ? (Date.now() + 86400*1000))
-			
-			request = @connection.request()
-			request.input 'sid', sid
-			request.input 'session', JSON.stringify data
-			request.input 'expires', expires
-			
-			if @connection.config.options.tdsVersion in ['7_1', '7_2']
-				# support for sql server 2005, 2000
-				request.query "update #{@table} set session = @session, expires = @expires where sid = @sid;if @@rowcount = 0 begin insert into #{@table} (sid, session, expires) values (@sid, @session, @expires) end;", callback
-			
-			else
-				request.query "merge into #{@table} with (holdlock) s using (values(@sid, @session)) as ns (sid, session) on (s.sid = ns.sid) when matched then update set s.session = @session, s.expires = @expires when not matched then insert (sid, session, expires) values (@sid, @session, @expires);", callback
+			@_ready (err) ->
+				if err then return callback err
+				
+				expires = new Date(data.cookie?.expires ? (Date.now() + 86400*1000))
+				
+				request = @connection.request()
+				request.input 'sid', sid
+				request.input 'session', JSON.stringify data
+				request.input 'expires', expires
+				
+				if @connection.config.options.tdsVersion in ['7_1', '7_2']
+					# support for sql server 2005, 2000
+					request.query "update #{@table} set session = @session, expires = @expires where sid = @sid;if @@rowcount = 0 begin insert into #{@table} (sid, session, expires) values (@sid, @session, @expires) end;", callback
+				
+				else
+					request.query "merge into #{@table} with (holdlock) s using (values(@sid, @session)) as ns (sid, session) on (s.sid = ns.sid) when matched then update set s.session = @session, s.expires = @expires when not matched then insert (sid, session, expires) values (@sid, @session, @expires);", callback
 		
 		###
 		Update expiration date of the given `sid`.
@@ -83,12 +86,15 @@ module.exports = (session) ->
 		###
 		
 		touch: (sid, data, callback) ->
-			expires = new Date(data.cookie?.expires ? (Date.now() + 86400*1000))
-			
-			request = @connection.request()
-			request.input 'sid', sid
-			request.input 'expires', expires
-			request.query "update #{@table} set expires = @expires where sid = @sid", callback
+			@_ready (err) ->
+				if err then return callback err
+				
+				expires = new Date(data.cookie?.expires ? (Date.now() + 86400*1000))
+				
+				request = @connection.request()
+				request.input 'sid', sid
+				request.input 'expires', expires
+				request.query "update #{@table} set expires = @expires where sid = @sid", callback
 
 		###
 		Destroy the session associated with the given `sid`.
@@ -98,9 +104,12 @@ module.exports = (session) ->
 		###
 		
 		destroy: (sid, callback) ->
-			request = @connection.request()
-			request.input 'sid', sid
-			request.query "delete from #{@table} where sid = @sid", callback
+			@_ready (err) ->
+				if err then return callback err
+				
+				request = @connection.request()
+				request.input 'sid', sid
+				request.query "delete from #{@table} where sid = @sid", callback
 		
 		###
 		Fetch number of sessions.
@@ -109,11 +118,14 @@ module.exports = (session) ->
 		###
 		
 		length: (callback) ->
-			request = @connection.request()
-			request.query "select count(sid) as length from #{@table}", (err, recordset) ->
+			@_ready (err) ->
 				if err then return callback err
 				
-				callback null, recordset[0].length
+				request = @connection.request()
+				request.query "select count(sid) as length from #{@table}", (err, recordset) ->
+					if err then return callback err
+					
+					callback null, recordset[0].length
 		
 		###
 		Clear all sessions.
@@ -122,7 +134,10 @@ module.exports = (session) ->
 		###
 		
 		clear: (callback) ->
-			request = @connection.request()
-			request.query "truncate table #{@table}", callback
+			@_ready (err) ->
+				if err then return callback err
+				
+				request = @connection.request()
+				request.query "truncate table #{@table}", callback
 	
 	MSSQLStore

@@ -47,6 +47,25 @@ app.use(session({
 }));
 ```
 
+### Advanced usage
+
+```javascript
+var store = new MSSQLStore(config, options);
+
+store.on('connect', function() {
+	// ... connection established
+});
+
+store.on('error', function() {
+	// ... connection error
+});
+
+app.use(session({
+    store: store
+    secret: 'supersecret'
+}));
+```
+
 ## Configuration
 
 To see all options please visit [node-mssql docs](https://github.com/patriksimek/node-mssql#cfg-basic).

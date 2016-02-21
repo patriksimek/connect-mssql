@@ -100,6 +100,19 @@ describe 'connect-mssql', ->
 				assert.equal length, 0
 				
 				done()
+
+	describe 'errors', ->
+		store = null
+
+		it 'shoud wait for connection establishment', (done) ->
+			store = new MSSQLStore config()
+			store.get 'asdf', done
+
+		it 'shoud report error when connection is closed', (done) ->
+			store.connection.close()
+			store.get 'asdf', (err) ->
+				assert.ok err
+				done()
 	
 	after (done) ->
 		sql.connect config(), (err) ->
