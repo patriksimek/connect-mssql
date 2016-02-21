@@ -7,6 +7,11 @@ module.exports = (session) ->
 	
 	class MSSQLStore extends Store
 		table: '[sessions]'
+		ttl: 1000 * 60 * 60 * 24
+		autoRemove: 'never'
+		autoRemoveInterval: 1000 * 60 * 10
+		autoRemoveCallback: undefined
+		useUTC: true
 		
 		###
 		Initialize MSSQLStore with the given `options`.
@@ -16,14 +21,25 @@ module.exports = (session) ->
 		###
 
 		constructor: (config, options) ->
-			if options?.table
-				{name, schema, database} = sql.Table.parseName options.table
-				@table = "#{if database then "[#{database}]." else ""}#{if schema then "[#{schema}]." else ""}[#{name}]"
+			if options
+				if options.table
+					{name, schema, database} = sql.Table.parseName options.table
+					@table = "#{if database then "[#{database}]." else ""}#{if schema then "[#{schema}]." else ""}[#{name}]"
+				
+				@ttl = options.ttl if options.ttl
+				@autoRemove = options.autoRemove if options.autoRemove
+				@autoRemoveInterval = options.autoRemoveInterval if options.autoRemoveInterval
+				@autoRemoveCallback = options.autoRemoveCallback if options.autoRemoveCallback
+			
+			@useUTC = config.options.useUTC if config.options?.useUTC?
 
 			@connection = new sql.Connection config
 			@connection.on 'connect', @emit.bind(@, 'connect')
 			@connection.on 'error', @emit.bind(@, 'error')
-			@connection.connect()
+			@connection.connect().then =>
+				if @autoRemove is 'interval'
+					@destroyExpired()
+					setInterval @destroyExpired.bind(@), @autoRemoveInterval
 		
 		_ready: (callback) ->
 			if @connection.connected then return callback.call @
@@ -36,7 +52,7 @@ module.exports = (session) ->
 		@param {String} sid
 		@callback callback
 		###
-			
+		
 		get: (sid, callback) ->
 			@_ready (err) ->
 				if err then return callback err
@@ -63,7 +79,7 @@ module.exports = (session) ->
 			@_ready (err) ->
 				if err then return callback err
 				
-				expires = new Date(data.cookie?.expires ? (Date.now() + 86400*1000))
+				expires = new Date(data.cookie?.expires ? (Date.now() + @ttl))
 				
 				request = @connection.request()
 				request.input 'sid', sid
@@ -89,7 +105,7 @@ module.exports = (session) ->
 			@_ready (err) ->
 				if err then return callback err
 				
-				expires = new Date(data.cookie?.expires ? (Date.now() + 86400*1000))
+				expires = new Date(data.cookie?.expires ? (Date.now() + @ttl))
 				
 				request = @connection.request()
 				request.input 'sid', sid
@@ -110,7 +126,18 @@ module.exports = (session) ->
 				request = @connection.request()
 				request.input 'sid', sid
 				request.query "delete from #{@table} where sid = @sid", callback
+
+		###
+		Destroy expired sessions.
+		###
 		
+		destroyExpired: (callback) ->
+			@_ready (err) ->
+				if err then return (callback ? @autoRemoveCallback)? err
+				
+				request = @connection.request()
+				request.query "delete from #{@table} where expires <= get#{if @useUTC then "utc" else ""}date()", callback ? @autoRemoveCallback
+
 		###
 		Fetch number of sessions.
 		

@@ -100,8 +100,48 @@ describe 'connect-mssql', ->
 				assert.equal length, 0
 				
 				done()
+	
+	
 
-	describe 'errors', ->
+	describe 'autoRemove test suite', ->
+		store = null
+		cbed = false
+		cb = -> cbed = true
+		
+		before (done) ->
+			store = new MSSQLStore config(), autoRemove: 'interval', autoRemoveCallback: cb
+			store.on 'connect', (err) ->
+				if err then return done err
+				
+				store.clear done
+		
+		it 'should destroy all sessions', (done) ->
+			setTimeout ->
+				store.set 'a', {cookie: {expires: new Date(Date.now() - 60000)}}, (err) ->
+					if err then return done err
+					
+					store.set 'b', {cookie: {expires: new Date(Date.now() - 60000)}}, (err) ->
+						if err then return done err
+						
+						store.length (err, length) ->
+							if err then return done err
+							
+							assert.equal length, 2
+							
+							store.destroyExpired (err) ->
+								if err then return done err
+								
+								store.length (err, length) ->
+									if err then return done err
+									
+									assert.equal length, 0
+									assert.ok cbed
+								
+									done()
+			
+			, 1000
+
+	describe 'errors test suite', ->
 		store = null
 
 		it 'shoud wait for connection establishment', (done) ->
