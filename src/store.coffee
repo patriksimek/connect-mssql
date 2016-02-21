@@ -13,9 +13,17 @@ module.exports = (session) ->
 		
 		@param {Object} config
 		@param {Object} [options]
+		@callback [cakkback]
 		###
-		
-		constructor: (config, options) ->
+
+		constructor: (config, options, callback) ->
+			if 'function' is typeof options
+				callback = options
+				options = undefined
+			
+			else
+				@table = options.table if options?.table
+				
 			if options?.table
 				{name, schema, database} = sql.Table.parseName options.table
 				@table = "#{if database then "[#{database}]." else ""}#{if schema then "[#{schema}]." else ""}[#{name}]"
@@ -23,7 +31,7 @@ module.exports = (session) ->
 			@connection = new sql.Connection config
 			@connection.on 'connect', @emit.bind(@, 'connect')
 			@connection.on 'error', @emit.bind(@, 'error')
-			@connection.connect()
+			@connection.connect callback
 		
 		###
 		Attempt to fetch session by the given `sid`.
