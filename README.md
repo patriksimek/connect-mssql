@@ -54,7 +54,7 @@ To see all options please visit [node-mssql docs](https://github.com/patriksimek
 <a name="license" />
 ## License
 
-Copyright (c) 2014-2015 Patrik Simek
+Copyright (c) 2014-2016 Patrik Simek
 
 The MIT License
 

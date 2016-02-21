@@ -16,8 +16,10 @@ module.exports = (session) ->
 		###
 		
 		constructor: (config, options) ->
-			@table = "[" + options.table + "]" if options?.table
-				
+			if options?.table
+				{name, schema, database} = sql.Table.parseName options.table
+				@table = "#{if database then "[#{database}]." else ""}#{if schema then "[#{schema}]." else ""}[#{name}]"
+
 			@connection = new sql.Connection config
 			@connection.on 'connect', @emit.bind(@, 'connect')
 			@connection.on 'error', @emit.bind(@, 'error')
@@ -31,7 +33,6 @@ module.exports = (session) ->
 		###
 			
 		get: (sid, callback) ->
-			if !this.connection.connected then return callback null, null
 			request = @connection.request()
 			request.input 'sid', sid
 			request.query "select session from #{@table} where sid = @sid", (err, recordset) ->
@@ -51,7 +52,6 @@ module.exports = (session) ->
 		###
 		
 		set: (sid, data, callback) ->
-			if !this.connection.connected then return callback null, null
 			expires = new Date(data.cookie?.expires ? (Date.now() + 86400*1000))
 			
 			request = @connection.request()
@@ -75,7 +75,6 @@ module.exports = (session) ->
 		###
 		
 		touch: (sid, data, callback) ->
-			if !this.connection.connected then return callback null, null
 			expires = new Date(data.cookie?.expires ? (Date.now() + 86400*1000))
 			
 			request = @connection.request()
@@ -91,7 +90,6 @@ module.exports = (session) ->
 		###
 		
 		destroy: (sid, callback) ->
-			if !this.connection.connected then return callback null, null
 			request = @connection.request()
 			request.input 'sid', sid
 			request.query "delete from #{@table} where sid = @sid", callback
@@ -103,7 +101,6 @@ module.exports = (session) ->
 		###
 		
 		length: (callback) ->
-			if !this.connection.connected then return callback null, null
 			request = @connection.request()
 			request.query "select count(sid) as length from #{@table}", (err, recordset) ->
 				if err then return callback err
@@ -117,7 +114,6 @@ module.exports = (session) ->
 		###
 		
 		clear: (callback) ->
-			if !this.connection.connected then return callback null, null
 			request = @connection.request()
 			request.query "truncate table #{@table}", callback
 	
