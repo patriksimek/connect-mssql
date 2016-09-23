@@ -59,7 +59,7 @@ module.exports = (session) ->
 				
 				request = @connection.request()
 				request.input 'sid', sid
-				request.query "select session from #{@table} where sid = @sid", (err, recordset) ->
+				request.query "select session from #{@table} where sid = @sid and expires >= get#{if @useUTC then "utc" else ""}date()", (err, recordset) ->
 					if err then return callback err
 					
 					if recordset.length
