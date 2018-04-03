@@ -4,9 +4,11 @@ SQL Server session store for Connect/Express based on [![Github Stars][mssql-ima
 
 [![NPM Version][npm-image]][npm-url] [![NPM Downloads][downloads-image]][downloads-url] [![Appveyor CI][appveyor-image]][appveyor-url]
 
+    Note: this is a fork of the original library we've published to npm as calvium-connect-mssql
+
 ## Installation
 
-    npm install connect-mssql
+    npm install calvium-connect-mssql
 
 ## Prerequisites
 
