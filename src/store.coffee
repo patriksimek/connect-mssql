@@ -44,8 +44,20 @@ module.exports = (session) ->
 		_ready: (callback) ->
 			if @connection.connected then return callback.call @
 			if @connection.connecting then return @connection.once 'connect', callback.bind @
-			callback.call @, new Error "Connection is closed."
-		
+
+			# Workaround for Connection is closed issue from https://github.com/patriksimek/connect-mssql/issues/16
+			try
+				current_instance = this
+				@connection.connect().then(->
+					callback.call current_instance
+				).catch (error) ->
+					console.error 'Unable to reopen closed connection', error
+					callback.call @, new Error error.message
+			catch error
+				console.error 'Unable to reopen closed connection', error
+				callback.call @, new Error 'Connection is closed.'
+			return
+
 		###
 		Attempt to fetch session by the given `sid`.
 		
