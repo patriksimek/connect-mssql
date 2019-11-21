@@ -21,6 +21,7 @@ module.exports = (session) ->
 		###
 
 		constructor: (config, options) ->
+			super()
 			if options
 				if options.table
 					{name, schema, database} = sql.Table.parseName options.table

@@ -29,19 +29,19 @@
 	},
 	"license": "MIT",
 	"dependencies": {
-		"mssql": "^3.1.1"
+		"coffeescript": "^2.4.1",
+		"mssql": "^6.0.1"
 	},
 	"devDependencies": {
-		"coffee-script": "^1.9.0",
-		"mocha": "^2.1.0",
-		"express-session": "*"
+		"express-session": "1.17.0",
+		"mocha": "^6.2.2"
 	},
 	"engines": {
-		"node": ">=0.10"
+		"node": ">=8.0"
 	},
 	"scripts": {
 		"prepublish": "node_modules/.bin/coffee --compile --output ./lib ./src",
 		"compile": "node_modules/.bin/coffee --compile --output ./lib ./src",
-		"test-integration": "node_modules/.bin/mocha test/integration"
+		"test-integration": "node_modules/.bin/mocha --require coffeescript/register test/integration"
 	}
 }
