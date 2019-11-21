@@ -29,10 +29,13 @@
 	},
 	"license": "MIT",
 	"dependencies": {
-		"coffeescript": "^2.4.1",
-		"mssql": "^6.0.1"
+		
+	},
+	"peerDependencies": {
+		"mssql": "^6.0.0"
 	},
 	"devDependencies": {
+		"coffeescript": "^2.4.1",
 		"express-session": "1.17.0",
 		"mocha": "^6.2.2"
 	},

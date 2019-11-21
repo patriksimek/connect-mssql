@@ -34,7 +34,7 @@ module.exports = (session) ->
 			
 			@useUTC = config.options.useUTC if config.options?.useUTC?
 
-			@connection = new sql.Connection config
+			@connection = new sql.ConnectionPool config
 			@connection.on 'connect', @emit.bind(@, 'connect')
 			@connection.on 'error', @emit.bind(@, 'error')
 			@connection.connect().then =>
@@ -58,13 +58,13 @@ module.exports = (session) ->
 			@_ready (err) ->
 				if err then return callback err
 				
-				request = @connection.request()
+				request = new sql.Request(@connection)
 				request.input 'sid', sid
-				request.query "select session from #{@table} where sid = @sid and expires >= get#{if @useUTC then "utc" else ""}date()", (err, recordset) ->
+				request.query "select session from #{@table} where sid = @sid and expires >= get#{if @useUTC then "utc" else ""}date()", (err, result) ->
 					if err then return callback err
 					
-					if recordset.length
-						return callback null, JSON.parse recordset[0].session
+					if result.recordset.length
+						return callback null, JSON.parse result.recordset[0].session
 					
 					callback null, null
 		
@@ -82,7 +82,7 @@ module.exports = (session) ->
 				
 				expires = new Date(data.cookie?.expires ? (Date.now() + @ttl))
 				
-				request = @connection.request()
+				request = new sql.Request(@connection)
 				request.input 'sid', sid
 				request.input 'session', JSON.stringify data
 				request.input 'expires', expires
@@ -108,7 +108,7 @@ module.exports = (session) ->
 				
 				expires = new Date(data.cookie?.expires ? (Date.now() + @ttl))
 				
-				request = @connection.request()
+				request = new sql.Request(@connection)
 				request.input 'sid', sid
 				request.input 'expires', expires
 				request.query "update #{@table} set expires = @expires where sid = @sid", callback
@@ -124,7 +124,7 @@ module.exports = (session) ->
 			@_ready (err) ->
 				if err then return callback err
 				
-				request = @connection.request()
+				request = new sql.Request(@connection)
 				request.input 'sid', sid
 				request.query "delete from #{@table} where sid = @sid", callback
 
@@ -136,7 +136,7 @@ module.exports = (session) ->
 			@_ready (err) ->
 				if err then return (callback ? @autoRemoveCallback)? err
 				
-				request = @connection.request()
+				request = new sql.Request(@connection)
 				request.query "delete from #{@table} where expires <= get#{if @useUTC then "utc" else ""}date()", callback ? @autoRemoveCallback
 
 		###
@@ -149,7 +149,7 @@ module.exports = (session) ->
 			@_ready (err) ->
 				if err then return callback err
 				
-				request = @connection.request()
+				request = new sql.Request(@connection)
 				request.query "select count(sid) as length from #{@table}", (err, recordset) ->
 					if err then return callback err
 					
@@ -165,7 +165,7 @@ module.exports = (session) ->
 			@_ready (err) ->
 				if err then return callback err
 				
-				request = @connection.request()
+				request = new sql.Request(@connection)
 				request.query "truncate table #{@table}", callback
 	
 	MSSQLStore
