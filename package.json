@@ -21,7 +21,7 @@
 		"express",
 		"connect"
 	],
-	"version": "2.0.0",
+	"version": "2.0.1",
 	"main": "lib/store.js",
 	"repository": {
 		"type": "git",
@@ -29,7 +29,7 @@
 	},
 	"license": "MIT",
 	"dependencies": {
-		
+
 	},
 	"peerDependencies": {
 		"mssql": "^6.0.0"
