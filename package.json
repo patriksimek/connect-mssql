@@ -32,7 +32,7 @@
 
 	},
 	"peerDependencies": {
-		"mssql": "^6.0.0"
+		"mssql": ">=6.0.0"
 	},
 	"devDependencies": {
 		"coffeescript": "^2.4.1",
